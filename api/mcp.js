@@ -2,7 +2,7 @@
 //
 // Chaque utilisateur passe ses propres tokens Guest Suite dans des en-têtes (au moins l'un des deux) :
 // - Experience API (demandes d'avis) : X-AUTH-TOKEN: <token> ou Authorization: Bearer <token> ;
-// - Widget Reviews API (lecture des avis) : X-WIDGET-TOKEN: <token>.
+// - Widget Reviews API (lecture des avis) : X-API-Key: <token> (ou X-WIDGET-TOKEN: <token>).
 // Ils ne sont jamais acceptés dans l'URL, pour ne pas finir dans les journaux d'accès.
 // Paramètre facultatif : ?location=<externalLocationId> pour l'établissement par défaut.
 //
@@ -34,7 +34,8 @@ export function readToken (req) {
  * @returns {string|undefined}
  */
 export function readWidgetToken (req) {
-    const header = req.headers["x-widget-token"];
+    // x-api-key fait partie des en-têtes acceptés par les connecteurs personnalisés de claude.ai.
+    const header = req.headers["x-api-key"] || req.headers["x-widget-token"];
     return header ? String(header) : undefined;
 }
 
@@ -55,7 +56,7 @@ export default async function handler (req, res) {
     const widgetToken = readWidgetToken(req);
     if (!token && !widgetToken) {
         return jsonRpcError(res, 401, "Missing Guest Suite token: send the Experience API token in the X-AUTH-TOKEN header "
-            + "(or Authorization: Bearer) and/or the Widget API token in the X-WIDGET-TOKEN header.");
+            + "(or Authorization: Bearer) and/or the Widget API token in the X-API-Key header.");
     }
 
     const location = req.query?.location ? String(req.query.location) : undefined;
