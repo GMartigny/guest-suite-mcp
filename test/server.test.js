@@ -40,7 +40,7 @@ async function connect (options) {
 test("expose les outils de demande d'avis et de mise à jour", async () => {
     const client = await connect({ fetch: fakeFetch({}).fetch });
     const { tools } = await client.listTools();
-    assert.deepEqual(tools.map(t => t.name).sort(), ["request_review", "update_contact", "update_experience"]);
+    assert.deepEqual(tools.map(t => t.name).sort(), ["list_locations", "request_review", "update_contact", "update_experience"]);
 });
 
 test("request_review crée le contact puis l'expérience", async () => {
@@ -118,6 +118,18 @@ test("update_contact n'envoie que les champs fournis", async () => {
     await client.callTool({ name: "update_contact", arguments: { uuid: CONTACT, lastName: null } });
     assert.deepEqual(Object.keys(calls[0].body).sort(), ["lastName", "trace"]);
     assert.equal(calls[0].body.lastName, null);
+});
+
+test("list_locations renvoie les externalLocationId du token", async () => {
+    const { fetch, calls } = fakeFetch({
+        "GET /api/locations": { status: 200, body: [{ uuid: CONTACT, name: "Mon Sapin de Bois", address: "Rezé", createdAt: "2026-01-01T00:00:00Z", externalLocationId: "SAPIN", isLicensed: true }] },
+    });
+    const client = await connect({ fetch, location: "SAPIN" });
+    const result = await client.callTool({ name: "list_locations", arguments: {} });
+    assert.equal(result.isError, undefined);
+    assert.equal(result.structuredContent.locations[0].externalLocationId, "SAPIN");
+    assert.equal(result.structuredContent.defaultLocation, "SAPIN");
+    assert.equal(calls[0].body, undefined);
 });
 
 test("le token est lu dans l'en-tête, le Bearer ou l'URL", () => {

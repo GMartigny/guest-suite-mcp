@@ -88,6 +88,20 @@ export function createClient ({ token, apiUrl = DEFAULT_API_URL, fetch: fetchImp
 
     return {
         /**
+         * Liste les établissements autorisés pour ce token.
+         * @param {boolean} [isLicensed] - Filtre sur la licence du module d'enquête
+         * @returns {Promise<Array<Object>>}
+         */
+        async listLocations (isLicensed) {
+            const query = isLicensed === undefined ? "" : `?isLicensed=${isLicensed ? "true" : "false"}`;
+            const result = await request("GET", `/api/locations${query}`);
+            if (result.status === 200) {
+                return Array.isArray(result.data) ? result.data : [];
+            }
+            return fail(result);
+        },
+
+        /**
          * Crée un contact, ou renvoie l'existant (409) pour le même couple e-mail / téléphone / établissement.
          * @param {Object} contact - Champs du contact (voir doc)
          * @returns {Promise<{contact: Object, created: boolean}>}

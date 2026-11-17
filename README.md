@@ -8,13 +8,14 @@ Une seule instance hébergée sur Vercel sert tout le monde : chaque utilisateur
 
 | Outil | Rôle |
 |---|---|
+| `list_locations` | Liste les établissements accessibles avec votre token et leur `externalLocationId`. |
 | `request_review` | Crée le contact (ou réutilise l'existant pour le même e-mail / téléphone / établissement), puis lui rattache une expérience, ce qui déclenche la demande d'avis. Deux appels le même jour pour le même contact renvoient l'expérience existante. |
 | `update_contact` | Modifie un contact déjà envoyé (prénom, nom, langue, données complémentaires). Seuls les champs passés sont modifiés ; `null` efface un champ. |
 | `update_experience` | Modifie les données complémentaires d'une expérience déjà envoyée. |
 
 ## Utilisation
 
-Il vous faut un **token** de l'Experience API (fourni par votre contact technique Guest Suite) et l'**identifiant de votre établissement** (`externalLocationId`).
+Il vous faut un **token** de l'Experience API (fourni par votre contact technique Guest Suite) et l'**identifiant de votre établissement** (`externalLocationId`). Si vous ne le connaissez pas, ajoutez d'abord le connecteur sans `?location=` et demandez à Claude d'appeler `list_locations`.
 
 URL du connecteur :
 

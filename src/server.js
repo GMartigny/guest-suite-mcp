@@ -49,6 +49,31 @@ export function buildServer ({ token, location, apiUrl, fetch }) {
     const client = createClient({ token, apiUrl, fetch });
     const server = new McpServer(SERVER_INFO);
 
+    server.registerTool("list_locations", {
+        title: "List my locations",
+        description: "List the locations your Guest Suite token can send customers to, "
+            + "with the externalLocationId to use in request_review (or in the connector URL as ?location=).",
+        inputSchema: {
+            isLicensed: z.boolean().optional()
+                .describe("Only return locations with (true) or without (false) an active survey-module license"),
+        },
+        annotations: { readOnlyHint: true, openWorldHint: true },
+    }, async ({ isLicensed }) => {
+        try {
+            const locations = (await client.listLocations(isLicensed)).map(l => ({
+                externalLocationId: l.externalLocationId,
+                name: l.name,
+                address: l.address,
+                isLicensed: l.isLicensed,
+                uuid: l.uuid,
+            }));
+            return ok({ defaultLocation: location ?? null, locations });
+        }
+        catch (error) {
+            return toolError(error);
+        }
+    });
+
     server.registerTool("request_review", {
         title: "Request a review",
         description: "Send a customer to Guest Suite so they receive a review request. "
