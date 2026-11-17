@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildServer } from "../lib/mcp-server.js";
-import { readToken } from "../api/mcp.js";
+import { readToken, readWidgetToken } from "../api/mcp.js";
 
 const CONTACT = "8f3b2c1a-4d5e-4f6a-9b8c-0d1e2f3a4b5c";
 const EXPERIENCE = "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d";
@@ -137,4 +137,69 @@ test("le token est lu dans l'en-tête ou le Bearer, jamais dans l'URL", () => {
     assert.equal(readToken({ headers: { authorization: "Bearer b" } }), "b");
     assert.equal(readToken({ headers: {}, query: { token: "c" } }), undefined);
     assert.equal(readToken({ headers: {}, query: {} }), undefined);
+});
+
+test("sans token widget, les outils d'avis publiés sont absents ; avec lui seul, seuls eux apparaissent", async () => {
+    const { fetch } = fakeFetch({});
+    let client = await connect({ fetch });
+    let names = (await client.listTools()).tools.map(t => t.name);
+    assert.ok(!names.includes("list_reviews"));
+
+    client = await connect({ fetch, token: undefined, widgetToken: "widget-token" });
+    names = (await client.listTools()).tools.map(t => t.name).sort();
+    assert.deepEqual(names, ["get_review_stats", "list_reviews"]);
+});
+
+test("list_reviews passe le token en paramètre et renvoie des avis compacts", async () => {
+    const calls = [];
+    const fetch = async (url, init) => {
+        calls.push({ url: new URL(url), init });
+        return new Response(JSON.stringify({
+            page: 0, count: 1, max_count: 50,
+            reviews: [{ reviewUuid: "r-1", id: 7, global_rate: 9.5, comment: "Superbe sapin", user_name: "Jeanne D.",
+                establishment_name: "Mon Sapin de Bois", experience_extra_data: { commande: "cs_123" }, responses: [] }],
+        }), { status: 200 });
+    };
+    const client = await connect({ fetch, token: undefined, widgetToken: "widget-token" });
+    const result = await client.callTool({ name: "list_reviews", arguments: { from: "2026-11-01" } });
+
+    assert.equal(result.isError, undefined);
+    const { url, init } = calls[0];
+    assert.equal(url.pathname, "/api/v1/reviews");
+    assert.equal(url.searchParams.get("access_token"), "widget-token");
+    assert.equal(url.searchParams.get("from"), "2026-11-01");
+    assert.equal(url.searchParams.get("page"), "0");
+    assert.equal(init.headers["X-AUTH-TOKEN"], undefined);
+    const review = result.structuredContent.reviews[0];
+    assert.equal(review.rating, 9.5);
+    assert.equal(review.author, "Jeanne D.");
+    assert.deepEqual(review.experienceExtraData, { commande: "cs_123" });
+});
+
+test("get_review_stats lit les statistiques globales ou celles d'un établissement", async () => {
+    const { fetch, calls } = fakeFetch({
+        "GET /api/v1/locations/statistics": { status: 200, body: { average_rate: 9.2, total: 12 } },
+        "GET /api/v1/locations/SAPIN": { status: 200, body: { locationUuid: "u-1", establishment_id: "SAPIN", establishment_name: "Atelier", average_rate: 9.6, total_reviews: 5 } },
+    });
+    const client = await connect({ fetch, token: undefined, widgetToken: "widget-token" });
+    let result = await client.callTool({ name: "get_review_stats", arguments: {} });
+    assert.deepEqual(result.structuredContent, { location: null, averageRate: 9.2, total: 12 });
+    result = await client.callTool({ name: "get_review_stats", arguments: { location: "SAPIN" } });
+    assert.equal(result.structuredContent.total, 5);
+    assert.equal(result.structuredContent.location.name, "Atelier");
+    assert.equal(calls.length, 2);
+});
+
+test("les erreurs widget ne divulguent pas le token", async () => {
+    const { fetch } = fakeFetch({ "GET /api/v1/reviews": { status: 401, body: { message: "Invalid token" } } });
+    const client = await connect({ fetch, token: undefined, widgetToken: "widget-secret" });
+    const result = await client.callTool({ name: "list_reviews", arguments: {} });
+    assert.equal(result.isError, true);
+    assert.match(result.content[0].text, /401/);
+    assert.doesNotMatch(result.content[0].text, /widget-secret/);
+});
+
+test("le token widget est lu dans l'en-tête X-WIDGET-TOKEN uniquement", () => {
+    assert.equal(readWidgetToken({ headers: { "x-widget-token": "w" } }), "w");
+    assert.equal(readWidgetToken({ headers: {}, query: { access_token: "w" } }), undefined);
 });

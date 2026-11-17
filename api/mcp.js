@@ -1,11 +1,12 @@
 // Fonction Vercel : point d'entrée MCP (Streamable HTTP, sans session).
 //
-// Chaque utilisateur passe son propre token Guest Suite dans un en-tête :
-// X-AUTH-TOKEN: <token> ou Authorization: Bearer <token>. Il n'est jamais accepté dans l'URL,
-// pour ne pas finir dans les journaux d'accès.
+// Chaque utilisateur passe ses propres tokens Guest Suite dans des en-têtes (au moins l'un des deux) :
+// - Experience API (demandes d'avis) : X-AUTH-TOKEN: <token> ou Authorization: Bearer <token> ;
+// - Widget Reviews API (lecture des avis) : X-WIDGET-TOKEN: <token>.
+// Ils ne sont jamais acceptés dans l'URL, pour ne pas finir dans les journaux d'accès.
 // Paramètre facultatif : ?location=<externalLocationId> pour l'établissement par défaut.
 //
-// Le token n'est jamais enregistré par ce serveur ; il sert uniquement à appeler Guest Suite.
+// Les tokens ne sont jamais enregistrés par ce serveur ; ils servent uniquement à appeler Guest Suite.
 
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { buildServer } from "../lib/mcp-server.js";
@@ -28,6 +29,16 @@ export function readToken (req) {
 }
 
 /**
+ * Lit le token de la Widget Reviews API.
+ * @param {import("http").IncomingMessage} req
+ * @returns {string|undefined}
+ */
+export function readWidgetToken (req) {
+    const header = req.headers["x-widget-token"];
+    return header ? String(header) : undefined;
+}
+
+/**
  * Réponse d'erreur au format JSON-RPC.
  */
 function jsonRpcError (res, status, message) {
@@ -41,12 +52,20 @@ export default async function handler (req, res) {
     }
 
     const token = readToken(req);
-    if (!token) {
-        return jsonRpcError(res, 401, "Missing Guest Suite token: send it in the X-AUTH-TOKEN header (or Authorization: Bearer).");
+    const widgetToken = readWidgetToken(req);
+    if (!token && !widgetToken) {
+        return jsonRpcError(res, 401, "Missing Guest Suite token: send the Experience API token in the X-AUTH-TOKEN header "
+            + "(or Authorization: Bearer) and/or the Widget API token in the X-WIDGET-TOKEN header.");
     }
 
     const location = req.query?.location ? String(req.query.location) : undefined;
-    const server = buildServer({ token, location, apiUrl: process.env.GUEST_SUITE_API_URL || undefined });
+    const server = buildServer({
+        token,
+        widgetToken,
+        location,
+        apiUrl: process.env.GUEST_SUITE_API_URL || undefined,
+        widgetApiUrl: process.env.GUEST_SUITE_WIDGET_API_URL || undefined,
+    });
     const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
