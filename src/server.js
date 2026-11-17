@@ -8,7 +8,7 @@ export const SERVER_INFO = { name: "guest-suite-mcp", version: "1.0.0" };
 
 const extraData = z.array(z.object({
     name: z.string().min(1).describe("Field name (matched case- and accent-insensitively by Guest Suite)"),
-    value: z.union([z.string(), z.number()]).describe("Value, stored as a string (max 254 characters)"),
+    value: z.union([z.string().max(254), z.number()]).describe("Value, stored as a string (max 254 characters, booleans are rejected)"),
 })).optional();
 
 const dateTime = z.string().describe("ISO 8601 date-time, ideally with a timezone (e.g. 2026-11-17T14:00:00+01:00)");
