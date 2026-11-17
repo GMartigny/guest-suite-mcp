@@ -199,8 +199,9 @@ test("les erreurs widget ne divulguent pas le token", async () => {
     assert.doesNotMatch(result.content[0].text, /widget-secret/);
 });
 
-test("le token widget est lu dans l'en-tête X-API-Key ou X-WIDGET-TOKEN uniquement", () => {
-    assert.equal(readWidgetToken({ headers: { "x-api-key": "k" } }), "k");
+test("le token widget est lu dans l'en-tête X-ACCESS-TOKEN ou X-WIDGET-TOKEN uniquement", () => {
+    assert.equal(readWidgetToken({ headers: { "x-access-token": "k" } }), "k");
+    assert.equal(readWidgetToken({ headers: { "x-api-key": "k" } }), undefined);
     assert.equal(readWidgetToken({ headers: { "x-widget-token": "w" } }), "w");
     assert.equal(readWidgetToken({ headers: {}, query: { access_token: "w" } }), undefined);
 });

@@ -2,7 +2,7 @@
 //
 // Chaque utilisateur passe ses propres tokens Guest Suite dans des en-têtes (au moins l'un des deux) :
 // - Experience API (demandes d'avis) : X-AUTH-TOKEN: <token> ou Authorization: Bearer <token> ;
-// - Widget Reviews API (lecture des avis) : X-API-Key: <token> (ou X-WIDGET-TOKEN: <token>).
+// - Widget Reviews API (lecture des avis) : X-ACCESS-TOKEN: <token> (ou X-WIDGET-TOKEN: <token>).
 // Ils ne sont jamais acceptés dans l'URL, pour ne pas finir dans les journaux d'accès.
 // Paramètre facultatif : ?location=<externalLocationId> pour l'établissement par défaut.
 //
@@ -34,8 +34,9 @@ export function readToken (req) {
  * @returns {string|undefined}
  */
 export function readWidgetToken (req) {
-    // x-api-key fait partie des en-têtes acceptés par les connecteurs personnalisés de claude.ai.
-    const header = req.headers["x-api-key"] || req.headers["x-widget-token"];
+    // x-access-token reprend le nom du paramètre de la Widget API (access_token)
+    // et fait partie des en-têtes acceptés par les connecteurs personnalisés de claude.ai.
+    const header = req.headers["x-access-token"] || req.headers["x-widget-token"];
     return header ? String(header) : undefined;
 }
 
@@ -56,7 +57,7 @@ export default async function handler (req, res) {
     const widgetToken = readWidgetToken(req);
     if (!token && !widgetToken) {
         return jsonRpcError(res, 401, "Missing Guest Suite token: send the Experience API token in the X-AUTH-TOKEN header "
-            + "(or Authorization: Bearer) and/or the Widget API token in the X-API-Key header.");
+            + "(or Authorization: Bearer) and/or the Widget API token in the X-ACCESS-TOKEN header.");
     }
 
     const location = req.query?.location ? String(req.query.location) : undefined;

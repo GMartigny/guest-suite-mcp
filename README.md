@@ -39,15 +39,15 @@ Configuration du client MCP :
 - **URL** : `https://<instance>.vercel.app/mcp` (option : `?location=<votre-externalLocationId>` pour l'établissement par défaut)
 - **En-têtes** :
   - `X-AUTH-TOKEN: <token-experience>` (ou `Authorization: Bearer <token-experience>`)
-  - `X-API-Key: <token-widget>` (ou `X-WIDGET-TOKEN: <token-widget>`)
+  - `X-ACCESS-TOKEN: <token-widget>` (ou `X-WIDGET-TOKEN: <token-widget>`)
 
 Les tokens ne sont acceptés que dans des en-têtes, jamais dans l'URL.
 
-- **claude.ai** : Réglages → Connecteurs → Ajouter un connecteur personnalisé, avec l'URL ci-dessus et le ou les en-têtes (`x-auth-token` et `x-api-key` font partie des en-têtes acceptés ; `X-WIDGET-TOKEN` est refusé).
+- **claude.ai** : Réglages → Connecteurs → Ajouter un connecteur personnalisé, avec l'URL ci-dessus et le ou les en-têtes (choisissez `x-auth-token` et `x-access-token` dans la liste proposée ; `X-WIDGET-TOKEN` n'y figure pas).
 - **Claude Code** :
 
 ```sh
-claude mcp add --transport http guest-suite https://<instance>.vercel.app/mcp --header "X-AUTH-TOKEN: <token-experience>" --header "X-API-Key: <token-widget>"
+claude mcp add --transport http guest-suite https://<instance>.vercel.app/mcp --header "X-AUTH-TOKEN: <token-experience>" --header "X-ACCESS-TOKEN: <token-widget>"
 ```
 
 `location` est facultatif : sans lui, passez `externalLocationId` à chaque appel de `request_review`.
