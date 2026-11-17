@@ -22,9 +22,10 @@ Configuration du client MCP :
 - **URL** : `https://<instance>.vercel.app/mcp` (option : `?location=<votre-externalLocationId>` pour l'établissement par défaut)
 - **En-tête** : `X-AUTH-TOKEN: <votre-token>` (ou `Authorization: Bearer <votre-token>`)
 
-Le token n'est accepté que dans un en-tête, jamais dans l'URL. Il faut donc un client qui permet d'ajouter un en-tête (Claude Code, par exemple) ; les connecteurs personnalisés claude.ai, qui n'acceptent qu'une URL, ne sont pas pris en charge.
+Le token n'est accepté que dans un en-tête, jamais dans l'URL.
 
-Exemple avec Claude Code :
+- **claude.ai** : Réglages → Connecteurs → Ajouter un connecteur personnalisé, avec l'URL ci-dessus et l'en-tête `X-AUTH-TOKEN`.
+- **Claude Code** :
 
 ```sh
 claude mcp add --transport http guest-suite https://<instance>.vercel.app/mcp --header "X-AUTH-TOKEN: <votre-token>"
