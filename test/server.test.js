@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { buildServer } from "../src/server.js";
+import { buildServer } from "../lib/mcp-server.js";
 import { readToken } from "../api/mcp.js";
 
 const CONTACT = "8f3b2c1a-4d5e-4f6a-9b8c-0d1e2f3a4b5c";

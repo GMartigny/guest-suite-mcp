@@ -46,7 +46,7 @@ npm install
 npm test
 ```
 
-Le point d'entrée Vercel est `api/mcp.js` (transport Streamable HTTP, sans session) ; les outils sont définis dans `src/server.js` et le client Guest Suite dans `src/guest-suite.js`.
+Le point d'entrée Vercel est `api/mcp.js` (transport Streamable HTTP, sans session) ; les outils sont définis dans `lib/mcp-server.js` et le client Guest Suite dans `lib/guest-suite.js`.
 
 ## Licence
 

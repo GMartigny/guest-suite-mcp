@@ -8,7 +8,7 @@
 // Le token n'est jamais enregistré par ce serveur ; il sert uniquement à appeler Guest Suite.
 
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { buildServer } from "../src/server.js";
+import { buildServer } from "../lib/mcp-server.js";
 
 /**
  * Lit le token Guest Suite de la requête.
