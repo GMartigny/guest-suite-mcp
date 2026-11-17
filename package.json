@@ -1,6 +1,6 @@
 {
     "name": "guest-suite-mcp",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Serveur MCP pour Guest Suite : demandes d'avis (Experience API) et lecture des avis publiés (Widget API), déployable sur Vercel",
     "type": "module",
     "license": "MIT",
