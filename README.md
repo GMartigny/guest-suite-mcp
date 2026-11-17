@@ -15,23 +15,27 @@ Une seule instance hébergée sur Vercel sert tout le monde : chaque utilisateur
 
 ## Utilisation
 
-Il vous faut un **token** de l'Experience API (fourni par votre contact technique Guest Suite) et l'**identifiant de votre établissement** (`externalLocationId`). Si vous ne le connaissez pas, ajoutez d'abord le connecteur sans `?location=` et demandez à Claude d'appeler `list_locations`.
+Il vous faut un **token** de l'Experience API (fourni par votre contact technique Guest Suite) et l'**identifiant de votre établissement** (`externalLocationId`). Si vous ne le connaissez pas, configurez d'abord le serveur sans `?location=` et appelez l'outil `list_locations`.
 
-URL du connecteur :
+Configuration du client MCP :
 
+- **URL** : `https://<instance>.vercel.app/mcp` (option : `?location=<votre-externalLocationId>` pour l'établissement par défaut)
+- **En-tête** : `X-AUTH-TOKEN: <votre-token>` (ou `Authorization: Bearer <votre-token>`)
+
+Le token n'est accepté que dans un en-tête, jamais dans l'URL. Il faut donc un client qui permet d'ajouter un en-tête (Claude Code, par exemple) ; les connecteurs personnalisés claude.ai, qui n'acceptent qu'une URL, ne sont pas pris en charge.
+
+Exemple avec Claude Code :
+
+```sh
+claude mcp add --transport http guest-suite https://<instance>.vercel.app/mcp --header "X-AUTH-TOKEN: <votre-token>"
 ```
-https://<instance>.vercel.app/mcp/<votre-token>?location=<votre-externalLocationId>
-```
-
-- **claude.ai** : Réglages → Connecteurs → Ajouter un connecteur personnalisé, collez l'URL ci-dessus.
-- **Clients qui acceptent des en-têtes** (Claude Code, Claude Desktop…) : URL `https://<instance>.vercel.app/mcp?location=...` et en-tête `X-AUTH-TOKEN: <token>` (ou `Authorization: Bearer <token>`).
 
 `location` est facultatif : sans lui, passez `externalLocationId` à chaque appel de `request_review`.
 
 ### Sécurité
 
-- Traitez l'URL du connecteur comme un mot de passe : elle contient votre token.
-- Ce serveur ne stocke rien et ne journalise pas les tokens. Comme pour toute requête HTTP, l'hébergeur peut toutefois conserver les URL appelées dans ses journaux techniques : si c'est un problème, déployez votre propre instance (ci-dessous) ou utilisez l'en-tête.
+- Le token voyage uniquement dans un en-tête HTTPS : il n'apparaît pas dans les URL ni dans les journaux d'accès.
+- Ce serveur ne stocke rien et ne journalise pas les tokens. Si vous préférez ne pas faire transiter votre token par une instance tierce, déployez la vôtre (ci-dessous).
 
 ## Déployer sa propre instance
 

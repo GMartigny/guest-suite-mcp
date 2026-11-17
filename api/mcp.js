@@ -1,8 +1,8 @@
 // Fonction Vercel : point d'entrée MCP (Streamable HTTP, sans session).
 //
-// Chaque utilisateur passe son propre token Guest Suite, au choix :
-// - dans l'URL : /mcp/<token> ou /mcp?token=<token> (pour claude.ai, qui ne permet pas d'en-têtes)
-// - dans un en-tête : X-AUTH-TOKEN: <token> ou Authorization: Bearer <token>
+// Chaque utilisateur passe son propre token Guest Suite dans un en-tête :
+// X-AUTH-TOKEN: <token> ou Authorization: Bearer <token>. Il n'est jamais accepté dans l'URL,
+// pour ne pas finir dans les journaux d'accès.
 // Paramètre facultatif : ?location=<externalLocationId> pour l'établissement par défaut.
 //
 // Le token n'est jamais enregistré par ce serveur ; il sert uniquement à appeler Guest Suite.
@@ -24,8 +24,7 @@ export function readToken (req) {
     if (auth && /^Bearer\s+/i.test(auth)) {
         return auth.replace(/^Bearer\s+/i, "").trim();
     }
-    const query = req.query?.token;
-    return query ? String(Array.isArray(query) ? query[0] : query) : undefined;
+    return undefined;
 }
 
 /**
@@ -43,7 +42,7 @@ export default async function handler (req, res) {
 
     const token = readToken(req);
     if (!token) {
-        return jsonRpcError(res, 401, "Missing Guest Suite token: use /mcp/<token>, ?token=, X-AUTH-TOKEN or Authorization: Bearer.");
+        return jsonRpcError(res, 401, "Missing Guest Suite token: send it in the X-AUTH-TOKEN header (or Authorization: Bearer).");
     }
 
     const location = req.query?.location ? String(req.query.location) : undefined;

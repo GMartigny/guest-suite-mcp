@@ -132,9 +132,9 @@ test("list_locations renvoie les externalLocationId du token", async () => {
     assert.equal(calls[0].body, undefined);
 });
 
-test("le token est lu dans l'en-tête, le Bearer ou l'URL", () => {
+test("le token est lu dans l'en-tête ou le Bearer, jamais dans l'URL", () => {
     assert.equal(readToken({ headers: { "x-auth-token": "a" }, query: { token: "z" } }), "a");
     assert.equal(readToken({ headers: { authorization: "Bearer b" } }), "b");
-    assert.equal(readToken({ headers: {}, query: { token: "c" } }), "c");
+    assert.equal(readToken({ headers: {}, query: { token: "c" } }), undefined);
     assert.equal(readToken({ headers: {}, query: {} }), undefined);
 });
